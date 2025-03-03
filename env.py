@@ -168,7 +168,7 @@ class Environment:
         :param state: 智能体的当前坐标 (x, y)
         :return: 如果发生碰撞返回 True，否则返回 False
         """
-        if state in self.obstacles or not(0<=state[0]<=20 and 0<=state[1]<=20):
+        if state in self.obstacles or not(0<=state[0]<=self.x_range and 0<=state[1]<=self.y_range):
             return True
         else:
             return False

@@ -19,6 +19,7 @@ class QLearningTable:
         self.q_table_final = pd.DataFrame(columns=self.actions, dtype=np.float64)
         self.existed_coord_state = []
         self.obs_state = []
+        self.all_state = []
     # Function for choosing the action for the agent
     def choose_action(self, observation):
         #转换为元组类型
@@ -31,14 +32,19 @@ class QLearningTable:
             # Choosing random action - left 10 % for choosing randomly
             action = np.random.choice(self.actions) #随机选择
         else:
-            # print(self.q_table)
-            # print(observation)
-            state_action = self.q_table.loc[observation, :] #提取当前状态下所有动作的价值函数
-            # print(state_action)
+            if self.shock_detection(observation) == False: # 没有遇到走重复路的方式
+                    
+                # print(self.q_table)
+                # print(observation)
+                state_action = self.q_table.loc[observation, :] #提取当前状态下所有动作的价值函数
 
-            state_action = state_action.reindex(np.random.permutation(state_action.index))#打乱顺序，避免每次选择的动作都为序号偏前的动作
-           # print(state_action)
-            action = state_action.idxmax()
+                state_action = state_action.reindex(np.random.permutation(state_action.index))#打乱顺序，避免每次选择的动作都为序号偏前的动作
+                action = state_action.idxmax()
+            else:# 遇到了走过的路,随机选一个非障碍物的值
+                state_action = self.q_table.loc[observation, :]
+                state_action = state_action.reindex(np.random.permutation(state_action.index))  # 打乱顺序，防止偏向序号小的动作
+                state_action = state_action[state_action != -20]
+                action = np.random.choice(state_action.index)
         return action
     
     # Function for learning and updating Q-table with new knowledge
@@ -99,34 +105,12 @@ class QLearningTable:
                 self.q_table = pd.concat([self.q_table, new_row.to_frame().T])
                 # print(self.q_table)
             
-            
-    # #确保进入新的状态时，在q表中为该状态添加一行
-    # def check_state_exist(self, state):
-    #     # print(f"q_table_index:{self.q_table.index}")
-    #     # print(f"state:{state}")
-    #     # print(f"Type of state: {type(state)}")
-    #     # print(f"Type of index element: {type(self.q_table.index[0])}")
-    #     # state = ast.literal_eval(state)
-    #     # state = pd.MultiIndex.from_tuples([state])
-    #     state_id = ast.literal_eval(state)
-    #     if state_id in self.q_table_init.index:
-    #         row_values = self.q_table_init.loc[state_id].values  # 获取该行的值
-
-    #         # 创建新行，并将获取的值赋给它
-    #         new_row = pd.Series(
-    #             row_values,
-    #             index=self.q_table.columns,
-    #             name=state,
-    #         )
-    #         self.q_table = pd.concat([self.q_table, new_row.to_frame().T])
-    #     else:
-    #         # 如果指定的状态行不存在于self.q_table_init中，可以设置默认的0值
-    #         new_row = pd.Series(
-    #             [0]*len(self.actions),
-    #             index=self.q_table.columns,
-    #             name=state,
-    #         )
-    #         self.q_table = pd.concat([self.q_table, new_row.to_frame().T])
+    def shock_detection(self,state):
+        if state not in self.all_state:
+            state = self.all_state.append(state)
+            return False
+        else:    
+            return True   
 
     
     
@@ -168,25 +152,25 @@ class QLearningTable:
                 if y < self.map_size - 1:  
                     q_values[0] = -pamp[x][y+1]  # 上
                 else:
-                    q_values[0] = -120  # 不允许向上移动
+                    q_values[0] = -200  # 不允许向上移动
 
                 # 下方向的Q值：pamp[x][y-1]，如果y-1超出范围，则设置为-100
                 if y > 0:  
                     q_values[1] = -pamp[x][y-1]  # 下
                 else:
-                    q_values[1] = -120  # 不允许向下移动
+                    q_values[1] = -200  # 不允许向下移动
 
                 # 左方向的Q值：pamp[x-1][y]，如果x-1超出范围，则设置为-100
                 if x > 0:  
                     q_values[2] = -pamp[x-1][y]  # 左
                 else:
-                    q_values[2] = -120  # 不允许向左移动
+                    q_values[2] = -200  # 不允许向左移动
 
                 # 右方向的Q值：pamp[x+1][y]，如果x+1超出范围，则设置为-100
                 if x < self.map_size - 1:  
                     q_values[3] = -pamp[x+1][y]  # 右
                 else:
-                    q_values[3] = -120  # 不允许向右移动
+                    q_values[3] = -200  # 不允许向右移动
 
                 # 将q_values应用到Q表中
                 q_table.loc[(x, y), :] = pd.Series(q_values)
@@ -194,6 +178,11 @@ class QLearningTable:
         return q_table * 0.1  # 调整Q值的范围
         
 
+
+
+
+            
+        
                 
                 
 # Plotting the results for the number of steps

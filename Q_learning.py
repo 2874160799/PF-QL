@@ -36,6 +36,7 @@ def update():
             # RL chooses action based on observation当前机器人的坐标位置
             action = RL.choose_action(str(observation)) #寻找动作的依据为以一定概率选择目前状态下动作值函数最大的动作，以一定概率随机选择（随机选择的目的是增加探索率）
             # print(action)
+            # print(f"Actions for this round:{action}")
             total_actions.append(action)  # 记录每一步的选择动作
             # print(f"action:{action}")
             # RL takes an action and get the next observation and reward
@@ -83,7 +84,7 @@ def update():
     
 if __name__ =='__main__':
     
-    plotting = Plotting(map_size=20, obstacle_ratio=0.2)
+    plotting = Plotting(map_size=50, obstacle_ratio=0.2)
     obstacles = plotting._generate_obstacles()
     env = Environment(obstacles,plotting)
     RL = QLearningTable(plotting.map_size,

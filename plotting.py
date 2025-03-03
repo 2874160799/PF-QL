@@ -8,7 +8,7 @@ ETA = 100.0  # repulsive potential gain
 OSCILLATIONS_DETECTION_LENGTH = 3
 
 class Plotting:
-    def __init__(self, map_size=20, obstacle_ratio=0.2):
+    def __init__(self, map_size, obstacle_ratio=0.2):
         """
         初始化Plotting类
         :param map_size: 地图大小（默认50×50）
@@ -55,7 +55,7 @@ class Plotting:
         return self.obstacle_positions
 
     def plot_grid(self,path=None,save_path=None,dpi=300):
-        
+        print("Now saving... ...")
         fig,self.ax = plt.subplots(figsize=(self.map_size,self.map_size))
         self.ax.set_xlim(0,self.map_size)
         self.ax.set_ylim(0,self.map_size)
@@ -91,6 +91,7 @@ class Plotting:
         
         if save_path:
             plt.savefig(save_path, dpi=dpi)
+            print("save to "+save_path)
         else:
             plt.show()
         plt.close()
@@ -127,7 +128,15 @@ class Plotting:
                 ug = self.calc_attractive_potential(x,y,self.goal[0],self.goal[1]) #引力
                 # uo = self.calc_repulsive_potential(x,y,ox,oy,3) #斥力
                 if (x,y) in self.obstacle_positions:
-                    uf = 100
+                    uf = 200
+                    pamp[ix][iy] = 200
+                    for dx in [-1,0,1]:
+                        for dy in [-1,0,1]:
+                            nx,ny = x + dx,y + dy
+                            if 0 <= nx < self.map_size and 0 <= ny < self.map_size and (dx != 0 or dy != 0):
+                                # 判断周围是不是障碍物
+                                if (nx,ny) not in self.obstacle_positions:
+                                    pamp[nx][ny] += 10
                 else:
                     uf = ug 
                 pamp[ix][iy] = uf
@@ -163,13 +172,13 @@ class Plotting:
 
 
 
-# # 使用示例
-# if __name__ == "__main__":
-#     # 创建Plotting对象
-#     plotter = Plotting(map_size=20, obstacle_ratio=0.2)
-#     # 绘制地图并保存
-#     plotter.plot_grid(save_path="/home/ubuntu/lyl/Q_learning/img/map.png",dpi=300)
-#     pamp = plotter.calc_pamp_filed()
-#     print(pamp)
-#     # print(plotter.obstacle_positions)
+# 使用示例
+if __name__ == "__main__":
+    # 创建Plotting对象
+    plotter = Plotting(map_size=50, obstacle_ratio=0.2)
+    # 绘制地图并保存
+    plotter.plot_grid(save_path="/home/ubuntu/lyl/Q_learning/img/map.png",dpi=300)
+    # pamp = plotter.calc_pamp_filed()
+    # print(pamp)
+    # print(plotter.obstacle_positions)
 
